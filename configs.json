@@ -5,5 +5,8 @@
       "warning": {"border_color": "#FFA500"},
       "note":    {"border_color": "#00CED1"},
       "tip":     {"border_color": "#32CD32"}
-    }
+    },
+    "highlight_size": 40,
+    "highlight_color": [255, 0, 0, 128],
+    "export_path": "/root/Documents"
   }
