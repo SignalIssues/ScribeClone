@@ -1,52 +1,49 @@
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
-    QMessageBox, QScrollArea, QLineEdit, QHBoxLayout, QFrame,
-    QListWidget, QListWidgetItem, QInputDialog, QTextEdit, QFileDialog, QDialog
-    )
-import os 
 import json
+import os
 import zipfile
+from pathlib import Path
+from typing import List, Dict, Optional
 
-def save_project_dialog(self):
-    path, _ = QFileDialog.getSaveFileName(self, "Save Project", "*.zip", "Zip files (*.zip)")
-    if not path:
-        return
-    save_project(self.step_data, path)
 
-def save_project(steps, output_path):
-    try:
-        manifest = {
-            "version": "1.0",
-            "steps": []
+def save_project(steps: List[Dict], output_path: str) -> None:
+    """Save a list of step dictionaries to a zip file."""
+    manifest = {"version": "1.0", "steps": []}
+    for step in steps:
+        step_data = {
+            "filename": os.path.basename(step["filename"]),
+            "title": step.get("title", ""),
+            "alerts_above": step.get("alerts_above", []),
+            "alerts_below": step.get("alerts_below", []),
         }
-        
+        manifest["steps"].append(step_data)
+
+    with zipfile.ZipFile(output_path, "w") as zf:
+        zf.writestr("manifest.json", json.dumps(manifest, indent=2))
         for step in steps:
-            step_data = {
-                "filename": os.path.basename(step["filename"]),
+            if os.path.exists(step["filename"]):
+                zf.write(step["filename"], os.path.basename(step["filename"]))
+
+
+def load_project(zip_path: str, extract_to: Optional[str] = None) -> List[Dict]:
+    """Load a project from a zip archive and return the steps list."""
+    steps = []
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        with zf.open("manifest.json") as mf:
+            manifest = json.load(mf)
+        for step in manifest.get("steps", []):
+            filename = step["filename"]
+            if extract_to:
+                Path(extract_to).mkdir(parents=True, exist_ok=True)
+                zf.extract(filename, path=extract_to)
+                file_path = os.path.join(extract_to, filename)
+            else:
+                dest_dir = os.path.dirname(zip_path)
+                zf.extract(filename, path=dest_dir)
+                file_path = os.path.join(dest_dir, filename)
+            steps.append({
+                "filename": file_path,
                 "title": step.get("title", ""),
                 "alerts_above": step.get("alerts_above", []),
-                "alerts_below": step.get("alerts_below", [])
-            }
-            manifest["steps"].append(step_data)
-
-        with zipfile.ZipFile(output_path, 'w') as zf:
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-            for step in steps:
-                if os.path.exists(step["filename"]):
-                    zf.write(step["filename"], os.path.basename(step["filename"]))
-        
-        print(f"Project saved to {output_path}")
-    except Exception as e:
-        print(f"Error saving project: {e}")
-        raise
-
-def load_project(self):
-    path, _ = QFileDialog.getOpenFileName(self, "Load Project", "", "Zip files (*.zip)")
-    if not path:
-        return
-    # clear old screenshots
-    for f in SCREENSHOT_DIR.glob("*.png"):
-        f.unlink()
-    steps = load_project(path, extract_to=str(SCREENSHOT_DIR))
-    self.step_data = steps
-    self.show_loaded_editor()
+                "alerts_below": step.get("alerts_below", []),
+            })
+    return steps
