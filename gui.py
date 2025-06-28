@@ -130,7 +130,9 @@ def capture_click(x, y, settings=None):
 def on_click(x, y, button, pressed):
     global is_recording
     if pressed and is_recording and button == mouse.Button.left:
-        filename = capture_click(x, y)
+        # Queue the click coordinates for the capture thread.
+        # Screenshot capture is handled exclusively in the thread to
+        # avoid duplicating images for each click.
         click_queue.put((x, y))
 
 def wait_for_click():
