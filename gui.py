@@ -254,6 +254,7 @@ class ScribeApp(QWidget):
         self.screenshot_count = 0
         self.mouse_listener = None
         self.is_recording = False
+        self.capture_thread = None
         self.current_settings = DEFAULT_SETTINGS.copy()
         self.setWindowTitle("Local Scribe Tool")
         self.setGeometry(100, 100, 400, 200)
@@ -328,6 +329,9 @@ class ScribeApp(QWidget):
 
     def stop_recording(self):
         stop_recording()
+        if self.capture_thread:
+            self.capture_thread.stop()
+            self.capture_thread = None
         self.recording_timer.stop()
         self.status_label.setText("Recording stopped. Loading editor...")
         self.record_button.setEnabled(True)
@@ -623,6 +627,11 @@ class ScribeApp(QWidget):
         self.step_data = []
         global screenshot_count
         screenshot_count = 0
+
+        # Ensure any background capture thread is stopped
+        if self.capture_thread:
+            self.capture_thread.stop()
+            self.capture_thread = None
 
         # Detach and delete existing layout so we can reinitialize UI
         old_layout = self.layout()
