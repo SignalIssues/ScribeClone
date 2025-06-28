@@ -64,6 +64,42 @@ is_recording = False
 current_settings = DEFAULT_SETTINGS.copy()
 click_queue = queue.Queue()
 
+# Path to persistent config file
+CONFIG_PATH = Path("configs.json")
+
+def load_settings():
+    """Load persisted settings from CONFIG_PATH if available."""
+    global current_settings
+    if CONFIG_PATH.exists():
+        try:
+            with open(CONFIG_PATH, "r") as fh:
+                data = json.load(fh)
+            for key in DEFAULT_SETTINGS:
+                if key in data:
+                    value = data[key]
+                    if isinstance(DEFAULT_SETTINGS[key], tuple) and isinstance(value, list):
+                        value = tuple(value)
+                    current_settings[key] = value
+        except Exception as e:
+            print(f"Failed to load settings: {e}")
+
+def save_settings():
+    """Persist current settings to CONFIG_PATH."""
+    try:
+        data = {}
+        if CONFIG_PATH.exists():
+            with open(CONFIG_PATH, "r") as fh:
+                data = json.load(fh)
+        for key in DEFAULT_SETTINGS:
+            data[key] = current_settings.get(key, DEFAULT_SETTINGS[key])
+        with open(CONFIG_PATH, "w") as fh:
+            json.dump(data, fh, indent=2)
+    except Exception as e:
+        print(f"Failed to save settings: {e}")
+
+# Load settings on startup
+load_settings()
+
 def clear_click_queue():
     """Remove any pending click events or sentinels from the queue."""
     try:
@@ -296,7 +332,6 @@ class ScribeApp(QWidget):
         self.mouse_listener = None
         self.is_recording = False
         self.capture_thread = None
-        self.current_settings = DEFAULT_SETTINGS.copy()
         self.setWindowTitle("Local Scribe Tool")
         self.setGeometry(100, 100, 400, 200)
         self.step_data = []
@@ -352,7 +387,8 @@ class ScribeApp(QWidget):
 
 
     def start_recording(self):
-        self.capture_thread = CaptureThread(self.current_settings)
+        # Use the globally stored settings when recording
+        self.capture_thread = CaptureThread(current_settings)
         #self.capture_thread.screenshot_taken.connect(self.on_new_screenshot)
         self.capture_thread.start()
         self.recording_time = 0
@@ -700,6 +736,8 @@ class ScribeApp(QWidget):
         if settings_dialog.exec_() == QDialog.Accepted:
             global current_settings
             current_settings = settings_dialog.get_settings()
+            # Persist the new settings
+            save_settings()
 
     def clear_layout(self, layout=None):
         if layout is None:
