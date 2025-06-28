@@ -182,13 +182,19 @@ class CaptureThread(QThread):
     def run(self):
         with mss() as sct:
             while self._running:
-                # blocking wait for click events… or poll a queue populated by mouse.Listener
-                x, y = wait_for_click()  
+                # blocking wait for click events. `wait_for_click` will be
+                # released by `stop()` sending a sentinel value.
+                x, y = wait_for_click()
+                # Break if a sentinel was sent to unblock the queue
+                if x is None and y is None:
+                    break
                 filename = capture_click_to_file(x, y, self.settings)
                 self.screenshot_taken.emit(filename)
 
     def stop(self):
+        # Signal the thread to stop and release any blocking wait on the queue
         self._running = False
+        click_queue.put((None, None))
         self.wait()
 
 
