@@ -64,6 +64,14 @@ is_recording = False
 current_settings = DEFAULT_SETTINGS.copy()
 click_queue = queue.Queue()
 
+def clear_click_queue():
+    """Remove any pending click events or sentinels from the queue."""
+    try:
+        while True:
+            click_queue.get_nowait()
+    except queue.Empty:
+        pass
+
 def find_monitor(monitors, x, y):
     for m in monitors:
         x0,y0,x1,y1 = m["left"], m["top"], m["left"]+m["width"], m["top"]+m["height"]
@@ -148,6 +156,7 @@ def start_recording():
     # Clear out any screenshots from a previous session so new captures don't
     # mix with old files when the app is restarted without using the
     # "New Recording" action.
+    clear_click_queue()
     for f in SCREENSHOT_DIR.glob("*.png"):
         try:
             f.unlink()
@@ -166,6 +175,7 @@ def stop_recording():
         mouse_listener.stop()
         mouse_listener = None
         print("[*] Recording stopped.")
+    clear_click_queue()
 
 
 
@@ -673,6 +683,9 @@ class ScribeApp(QWidget):
         if self.capture_thread:
             self.capture_thread.stop()
             self.capture_thread = None
+
+        # Remove any queued click events from previous sessions
+        clear_click_queue()
 
         # Restore main UI
         self.setWindowTitle("Local Scribe Tool")
