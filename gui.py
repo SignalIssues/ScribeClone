@@ -145,6 +145,14 @@ def capture_click_to_file(x, y, settings):
 
 def start_recording():
     global mouse_listener, is_recording, screenshot_count
+    # Clear out any screenshots from a previous session so new captures don't
+    # mix with old files when the app is restarted without using the
+    # "New Recording" action.
+    for f in SCREENSHOT_DIR.glob("*.png"):
+        try:
+            f.unlink()
+        except Exception as e:
+            print(f"Warning: could not remove {f}: {e}")
     screenshot_count = 0
     is_recording = True
     mouse_listener = mouse.Listener(on_click=on_click)
