@@ -1,10 +1,26 @@
 # gui.py - Enhanced version with fixes
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
-    QMessageBox, QScrollArea, QLineEdit, QHBoxLayout, QFrame,
-    QListWidget, QListWidgetItem, QInputDialog, QTextEdit, QFileDialog, QDialog
-    )
-from PyQt5.QtGui import QPixmap, QFont
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QLabel,
+    QMessageBox,
+    QScrollArea,
+    QLineEdit,
+    QHBoxLayout,
+    QFrame,
+    QListWidget,
+    QListWidgetItem,
+    QInputDialog,
+    QTextEdit,
+    QFileDialog,
+    QDialog,
+    QFormLayout,
+    QSpinBox,
+    QColorDialog,
+)
+from PyQt5.QtGui import QPixmap, QFont, QColor
 from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal, QEventLoop
 from pathlib import Path
 import os
@@ -203,19 +219,22 @@ class SettingsDialog(QDialog):
         self.setLayout(layout)
         
         self.current_color = color
-    
-    def qcolor_to_argb_hex(r,g,b,a):
-        return f"#{a:02X}{r:02X}{g:02X}{b:02X}"
 
     def choose_color(self):
-        hexcol = qcolor_to_argb_hex(color.red(), color.green(), color.blue(), 128)
-        self.color_button.setStyleSheet(f"background-color: {hexcol}; min-height:30px;")
-
-        color = QColorDialog.getColor()
-        if color.isValid():
-            # Convert to RGBA with 50% transparency
-            self.current_color = (color.red(), color.green(), color.blue(), 128)
-            self.color_button.setStyleSheet(f"background-color: rgba({color.red()}, {color.green()}, {color.blue()}, 0.5); min-height: 30px;")
+        """Open color dialog and update preview button"""
+        initial = QColor(*self.current_color[:3])
+        chosen = QColorDialog.getColor(initial, self, "Choose Highlight Color")
+        if chosen.isValid():
+            # Store as RGBA tuple with half transparency
+            self.current_color = (
+                chosen.red(),
+                chosen.green(),
+                chosen.blue(),
+                128,
+            )
+            self.color_button.setStyleSheet(
+                f"background-color: rgba({chosen.red()}, {chosen.green()}, {chosen.blue()}, 0.5); min-height: 30px;"
+            )
     
     def browse_export_path(self):
         folder = QFileDialog.getExistingDirectory(self, "Choose Export Folder")
