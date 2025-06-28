@@ -1,5 +1,4 @@
-# main.py
-import gui
+from gui import run_gui
 
 if __name__ == "__main__":
-    gui.run_gui()
+    run_gui()
