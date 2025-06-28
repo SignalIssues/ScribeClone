@@ -19,7 +19,16 @@ def export_to_pdf(steps, output_path):
     """Export the recorded steps to a PDF with two screenshots per page."""
     try:
         pdf = FPDF()
-        pdf.set_auto_page_break(auto=True, margin=15)
+        margin = 15
+        # Disable automatic page breaks so we can control exactly two screenshots per page
+        pdf.set_auto_page_break(auto=False, margin=margin)
+        pdf.set_margins(margin, margin, margin)
+
+        page_width = pdf.w - 2 * margin
+        page_height = pdf.h - 2 * margin
+        # Rough amount of vertical space reserved for title and alerts for each step
+        reserved_height = 40
+        max_img_height = (page_height / 2) - reserved_height
 
         # Process steps two at a time so each page contains up to two screenshots
         for page_start in range(0, len(steps), 2):
@@ -53,9 +62,13 @@ def export_to_pdf(steps, output_path):
 
                 # Add image if it exists
                 if os.path.exists(step["filename"]):
-                    img_width = 180  # Max width for A4
-                    pdf.image(step["filename"], x=15, w=img_width)
-                    pdf.ln(img_width * 0.75)
+                    with Image.open(step["filename"]) as img:
+                        orig_w, orig_h = img.size
+                    scale = min(page_width / orig_w, max_img_height / orig_h)
+                    img_w = orig_w * scale
+                    img_h = orig_h * scale
+                    pdf.image(step["filename"], x=margin, w=img_w, h=img_h)
+                    pdf.ln(img_h)
 
                 # Add alerts below image
                 for alert in step.get("alerts_below", []):
