@@ -27,6 +27,7 @@ import os
 import sys
 import threading
 import time
+import queue
 from pynput import mouse
 from mss import mss
 from PIL import Image, ImageDraw
@@ -61,6 +62,7 @@ screenshot_count = 0
 mouse_listener = None
 is_recording = False
 current_settings = DEFAULT_SETTINGS.copy()
+click_queue = queue.Queue()
 
 def find_monitor(monitors, x, y):
     for m in monitors:
@@ -82,8 +84,10 @@ def draw_ring(img, x, y, radius, color):
     d.ellipse((x-inner, y-inner, x+inner, y+inner), fill=(0,0,0,0))
     return Image.alpha_composite(img.convert("RGBA"), overlay)
 
-def capture_click(x, y):
+def capture_click(x, y, settings=None):
     global screenshot_count, current_settings
+    if settings is None:
+        settings = current_settings
     try:
         with mss() as sct:
             mon = find_monitor(sct.monitors, x, y)
@@ -94,8 +98,8 @@ def capture_click(x, y):
 
             # Add click indicator with settings
             draw = ImageDraw.Draw(img)
-            radius = current_settings["highlight_size"] // 2
-            color = current_settings["highlight_color"]
+            radius = settings["highlight_size"] // 2
+            color = settings["highlight_color"]
             
             # Create transparent overlay
             overlay = Image.new('RGBA', img.size, (0, 0, 0, 0))
@@ -118,13 +122,24 @@ def capture_click(x, y):
             img.save(filename)
             print(f"[+] Screenshot saved: {filename}")
             screenshot_count += 1
+            return filename
     except Exception as e:
         print(f"Error capturing screenshot: {e}")
+        return None
 
 def on_click(x, y, button, pressed):
     global is_recording
     if pressed and is_recording and button == mouse.Button.left:
-        capture_click(x, y)
+        filename = capture_click(x, y)
+        click_queue.put((x, y))
+
+def wait_for_click():
+    """Block until a click is captured by the mouse listener."""
+    return click_queue.get()
+
+def capture_click_to_file(x, y, settings):
+    """Capture a click using the provided settings and return the saved file."""
+    return capture_click(x, y, settings)
 
 def start_recording():
     global mouse_listener, is_recording, screenshot_count
