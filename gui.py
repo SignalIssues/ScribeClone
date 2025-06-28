@@ -674,10 +674,11 @@ class ScribeApp(QWidget):
             self.capture_thread.stop()
             self.capture_thread = None
 
-        # Restore main UI using the existing layout
+        # Restore main UI
         self.setWindowTitle("Local Scribe Tool")
-        self.resize(400, 200)
+        # Clear the editor layout before resizing to avoid geometry warnings
         self.init_main_ui()
+        self.resize(400, 200)
 
     def show_settings(self):
         """Show settings dialog"""
