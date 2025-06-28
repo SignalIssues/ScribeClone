@@ -297,7 +297,13 @@ class ScribeApp(QWidget):
         self.init_main_ui()
 
     def init_main_ui(self):
-        layout = QVBoxLayout()
+        """(Re)initialize the main recording UI."""
+        layout = self.layout()
+        if layout is None:
+            layout = QVBoxLayout()
+            self.setLayout(layout)
+        else:
+            self.clear_layout(layout)
 
         # Title
         title = QLabel("📸 Local Scribe Recorder")
@@ -332,8 +338,6 @@ class ScribeApp(QWidget):
         settings_button = QPushButton("⚙️ Settings")
         settings_button.clicked.connect(self.show_settings)
         layout.addWidget(settings_button)
-
-        self.setLayout(layout)
 
 
 
@@ -670,13 +674,7 @@ class ScribeApp(QWidget):
             self.capture_thread.stop()
             self.capture_thread = None
 
-        # Detach and delete existing layout so we can reinitialize UI
-        old_layout = self.layout()
-        if old_layout:
-            old_layout.setParent(None)
-            old_layout.deleteLater()
-
-        # Restore main UI
+        # Restore main UI using the existing layout
         self.setWindowTitle("Local Scribe Tool")
         self.resize(400, 200)
         self.init_main_ui()
