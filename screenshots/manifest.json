@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "steps": [
+    {
+      "filename": "step_000.png",
+      "title": "",
+      "alerts_above": [],
+      "alerts_below": []
+    },
+    {
+      "filename": "step_001.png",
+      "title": "",
+      "alerts_above": [],
+      "alerts_below": []
+    },
+    {
+      "filename": "step_002.png",
+      "title": "",
+      "alerts_above": [],
+      "alerts_below": []
+    },
+    {
+      "filename": "step_003.png",
+      "title": "",
+      "alerts_above": [],
+      "alerts_below": []
+    }
+  ]
+}

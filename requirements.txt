@@ -1,0 +1,5 @@
+mss
+pynput
+Pillow
+PyQt5
+fpdf2

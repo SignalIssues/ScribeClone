@@ -1,0 +1,9 @@
+{
+    "default_dir": "",
+    "ui_theme": "light",
+    "alert_box_styles": {
+      "warning": {"border_color": "#FFA500"},
+      "note":    {"border_color": "#00CED1"},
+      "tip":     {"border_color": "#32CD32"}
+    }
+  }
