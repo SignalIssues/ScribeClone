@@ -689,9 +689,10 @@ class ScribeApp(QWidget):
 
         # Restore main UI
         self.setWindowTitle("Local Scribe Tool")
-        # Clear the editor layout before resizing to avoid geometry warnings
+        # Clear the editor layout and rebuild the main view
         self.init_main_ui()
-        self.resize(400, 200)
+        # Let Qt determine the appropriate size based on the new layout
+        self.adjustSize()
 
     def show_settings(self):
         """Show settings dialog"""
