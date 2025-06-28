@@ -418,9 +418,12 @@ class ScribeApp(QWidget):
         
         # Alert above button
         alert_above_btn = QPushButton("⚠️ Add Alert Above Image")
+        # The clicked signal passes a boolean 'checked' argument which can
+        # overwrite our captured layout if not accounted for. Explicitly
+        # accept and ignore it so the correct layout is used.
         alert_above_btn.clicked.connect(
-            lambda _l=layout: self.add_alert_dialog(_l, "above")
-            )
+            lambda checked=False, _l=layout: self.add_alert_dialog(_l, "above")
+        )
         layout.addWidget(alert_above_btn)
         
         # Image
@@ -433,7 +436,10 @@ class ScribeApp(QWidget):
         
         # Alert below button
         alert_below_btn = QPushButton("⚠️ Add Alert Below Image")
-        alert_below_btn.clicked.connect(lambda: self.add_alert_dialog(layout, "below"))
+        # Similarly ignore the boolean argument passed by the signal
+        alert_below_btn.clicked.connect(
+            lambda checked=False, _l=layout: self.add_alert_dialog(_l, "below")
+        )
         layout.addWidget(alert_below_btn)
         
         frame.setLayout(layout)
